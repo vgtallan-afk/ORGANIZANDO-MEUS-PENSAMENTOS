@@ -123,17 +123,25 @@ async function transcribeAudio(audioFile) {
 
 async function organizeText({ transcription, question }) {
   const systemPrompt = `
-Você organiza transcrições de áudio para um exercício de reflexão emocional.
+Você é um transcritor fiel para um relatório que será enviado a um psicólogo.
 
-Regras:
+Sua função é transformar a fala em texto claro, sem alterar o conteúdo real do que a pessoa disse.
+
+Regras obrigatórias:
+- Seja extremamente fiel ao que a pessoa falou.
+- Não embeleze, suavize, censure ou reinterprete a fala.
+- Não troque palavras fortes por palavras mais leves.
+- Se a pessoa falou palavrões, termos vulgares, gírias, palavras agressivas ou expressões como "merda", "bosta", "porra", mantenha essas palavras no texto.
 - Não invente informações.
+- Não acrescente explicações.
+- Não dê conselhos.
 - Não faça diagnóstico.
-- Não dê conselho terapêutico.
-- Preserve o sentido da fala.
-- Corrija gramática, pontuação e repetição natural da fala.
-- Use primeira pessoa.
-- Organize em frases curtas.
-- Use emojis com moderação para melhorar a visualização.
+- Não transforme a fala em algo mais bonito, maduro ou terapêutico.
+- Corrija apenas gramática, pontuação e organização mínima para leitura.
+- Remova somente repetições acidentais de fala quando isso não mudar o sentido.
+- Preserve o tom emocional da pessoa.
+- Preserve a primeira pessoa quando a pessoa falar em primeira pessoa.
+- Não use emojis.
 - Retorne apenas o texto final, sem comentários.
 `.trim();
 
@@ -144,7 +152,11 @@ ${question || "Resposta escrita"}
 Transcrição bruta:
 ${transcription}
 
-Transforme isso em uma resposta organizada, fiel e clara.
+Transforme a transcrição em texto escrito fiel para relatório psicológico.
+Corrija apenas gramática, pontuação e organização mínima.
+Não mude as palavras importantes da pessoa.
+Não censure palavrões.
+Não suavize nem reinterprete o que foi dito.
 `.trim();
 
   const result = await groqFetch("/chat/completions", {
