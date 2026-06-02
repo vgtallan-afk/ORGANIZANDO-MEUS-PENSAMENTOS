@@ -1,0 +1,18 @@
+{
+  "name": "organizando-meus-pensamentos",
+  "version": "2.3.0",
+  "private": true,
+  "description": "Quiz de reflexão com áudio, transcrição pela Groq, PDF e ícones PWA.",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0"
+  },
+  "devDependencies": {
+    "vercel": "^48.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
