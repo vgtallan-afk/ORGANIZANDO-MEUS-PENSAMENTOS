@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organizando meus pensamentos</title>
+  <meta name="description" content="Questionário em formato de quiz para organizar pensamentos, emoções e respostas equilibradas." />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    :root {
+      --bg-1: #07131f;
+      --bg-2: #102f3b;
+      --bg-3: #2c2547;
+      --card: rgba(13, 31, 44, 0.74);
+      --card-strong: rgba(18, 42, 58, 0.92);
+      --text: #f4fbfb;
+      --muted: rgba(226, 241, 241, 0.72);
+      --muted-2: rgba(226, 241, 241, 0.54);
+      --line: rgba(255, 255, 255, 0.14);
+      --line-strong: rgba(255, 255, 255, 0.24);
+      --primary: #78e0d3;
+      --primary-2: #9cb8ff;
+      --accent: #d8b4fe;
+      --danger: #ff9f9f;
+      --danger-bg: rgba(105, 35, 50, 0.64);
+      --success: #9af2bd;
+      --success-bg: rgba(33, 91, 66, 0.58);
+      --radius: 30px;
+      --shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 12%, rgba(120, 224, 211, 0.27), transparent 30%),
+        radial-gradient(circle at 92% 10%, rgba(156, 184, 255, 0.24), transparent 31%),
+        radial-gradient(circle at 50% 100%, rgba(216, 180, 254, 0.21), transparent 36%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2) 48%, var(--bg-3));
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100%, 940px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: clamp(18px, 4vw, 38px) 16px;
+      display: grid;
+      place-items: center;
+    }
+
+    .shell {
+      width: 100%;
+      background: rgba(5, 13, 24, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow);
+      border-radius: calc(var(--radius) + 10px);
+      backdrop-filter: blur(22px);
+      padding: clamp(16px, 3vw, 24px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgba(120, 224, 211, 0.28), rgba(156, 184, 255, 0.2));
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: inset 0 1px 18px rgba(255, 255, 255, 0.06);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.05rem, 3vw, 1.45rem);
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted-2);
+      font-size: 0.88rem;
+    }
+
+    .save-chip {
+      border: 1px solid rgba(120, 224, 211, 0.22);
+      color: var(--primary);
+      background: rgba(120, 224, 211, 0.08);
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .progress-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .progress {
+      height: 9px;
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2), var(--accent));
+      transition: width .28s ease;
+    }
+
+    .step-count {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 750;
+    }
+
+    .quiz-card {
+      min-height: min(640px, calc(100vh - 210px));
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.035)),
+        var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(22px, 5vw, 46px);
+      display: grid;
+      align-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quiz-card::before {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      right: -120px;
+      top: -120px;
+      background: radial-gradient(circle, rgba(120, 224, 211, 0.16), transparent 68%);
+      pointer-events: none;
+    }
+
+    .step {
+      display: none;
+      animation: enter .28s ease both;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    @keyframes enter {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      background: rgba(120, 224, 211, 0.09);
+      border: 1px solid rgba(120, 224, 211, 0.18);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 850;
+      font-size: 0.85rem;
+      margin-bottom: 18px;
+    }
+
+    .step h2 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 7vw, 4.4rem);
+      letter-spacing: -0.065em;
+      line-height: 0.95;
+    }
+
+    .step h3 {
+      margin: 0 0 10px;
+      font-size: clamp(1.9rem, 5.4vw, 3.65rem);
+      letter-spacing: -0.06em;
+      line-height: 0.96;
+    }
+
+    .question {
+      color: var(--muted);
+      font-size: clamp(1rem, 2.5vw, 1.22rem);
+      margin: 0 0 24px;
+      max-width: 760px;
+    }
+
+    label {
+      display: block;
+      font-weight: 850;
+      margin-bottom: 9px;
+      color: rgba(244, 251, 251, 0.92);
+    }
+
+    .field {
+      margin-top: 18px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border-radius: 22px;
+      padding: 16px 17px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    input[type="text"]::placeholder,
+    textarea::placeholder {
+      color: rgba(226, 241, 241, 0.38);
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: rgba(120, 224, 211, 0.54);
+      box-shadow: 0 0 0 5px rgba(120, 224, 211, 0.10);
+      background: rgba(255, 255, 255, 0.11);
+    }
+
+    textarea {
+      min-height: clamp(220px, 34vh, 340px);
+      resize: vertical;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .choices.one-col {
+      grid-template-columns: 1fr;
+      max-width: 720px;
+    }
+
+    @media (max-width: 720px) {
+      .choices {
+        grid-template-columns: 1fr;
+      }
+
+      .quiz-card {
+        min-height: min(680px, calc(100vh - 190px));
+      }
+    }
+
+    .choice {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.075);
+      padding: 15px;
+      display: grid;
+      gap: 12px;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .choice:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: rgba(255, 255, 255, 0.095);
+    }
+
+    .choice.is-active {
+      border-color: rgba(120, 224, 211, 0.54);
+      background: rgba(120, 224, 211, 0.10);
+    }
+
+    .choice-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-height: 31px;
+    }
+
+    .choice input[type="checkbox"],
+    .choice input[type="radio"] {
+      width: 21px;
+      height: 21px;
+      accent-color: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .choice label {
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .other-input,
+    .intensity {
+      display: none;
+    }
+
+    .choice.is-active .other-input,
+    .choice.is-active .intensity {
+      display: grid;
+    }
+
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .range-value {
+      min-width: 46px;
+      text-align: center;
+      color: #061520;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-weight: 950;
+    }
+
+    .helper {
+      color: var(--muted-2);
+      font-size: 0.95rem;
+      margin-top: 10px;
+    }
+
+    .reminder-card {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(120, 224, 211, 0.18), transparent 45%),
+        radial-gradient(circle at 100% 100%, rgba(216, 180, 254, 0.17), transparent 45%),
+        rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 28px;
+      padding: clamp(18px, 4vw, 28px);
+      margin-top: 20px;
+      color: rgba(244, 251, 251, 0.92);
+      font-size: 1.08rem;
+    }
+
+    .final-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 620px) {
+      .final-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .save-chip {
+        display: none;
+      }
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .nav-left,
+    .nav-right {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
+    }
+
+    .btn-primary {
+      color: #061520;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 14px 30px rgba(120, 224, 211, 0.18);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .btn-danger {
+      color: #ffe6e6;
+      background: rgba(149, 48, 66, 0.26);
+      border: 1px solid rgba(255, 159, 159, 0.22);
+    }
+
+    .message {
+      display: none;
+      border-radius: 18px;
+      padding: 13px 15px;
+      margin-top: 14px;
+      font-weight: 760;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.error {
+      color: #ffe0e0;
+      background: var(--danger-bg);
+      border: 1px solid rgba(255, 159, 159, 0.22);
+    }
+
+    .message.success {
+      color: #d8ffe8;
+      background: var(--success-bg);
+      border: 1px solid rgba(154, 242, 189, 0.2);
+    }
+
+    .disclaimer {
+      text-align: center;
+      color: var(--muted-2);
+      font-size: 0.86rem;
+      margin: 16px 8px 0;
+    }
+
+    .required {
+      color: var(--primary);
+    }
+
+    @media (max-width: 460px) {
+      .nav {
+        flex-direction: column-reverse;
+      }
+
+      .nav-left,
+      .nav-right,
+      .nav button {
+        width: 100%;
+      }
+
+      .nav button {
+        justify-content: center;
+      }
+
+      .brand h1 {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-icon">🧠</div>
+          <div>
+            <h1>Organizando meus pensamentos</h1>
+            <p>Uma pergunta por vez.</p>
+          </div>
+        </div>
+        <div class="save-chip">Salvamento automático</div>
+      </header>
+
+      <div class="progress-wrap" aria-label="Progresso">
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="step-count" id="stepCount">1 de 9</div>
+      </div>
+
+      <form id="thoughtForm" novalidate>
+        <section class="quiz-card">
+          <div class="step active" data-step="0">
+            <div class="kicker">Começo</div>
+            <h2>Vamos organizar o que está acontecendo.</h2>
+            <p class="question">
+              Responda com calma. No final, você poderá gerar um PDF em A4 para imprimir,
+              guardar ou compartilhar pelo WhatsApp quando o celular permitir.
+            </p>
+
+            <div class="field">
+              <label for="name">Nome <span class="required">*</span></label>
+              <input id="name" name="name" type="text" autocomplete="name" placeholder="Digite seu nome" required />
+            </div>
+
+            <p class="helper">
+              Suas respostas ficam salvas apenas neste navegador, neste aparelho. Nada é enviado para servidor.
+            </p>
+          </div>
+
+          <div class="step" data-step="1">
+            <div class="kicker">Situação</div>
+            <h3>O que aconteceu?</h3>
+            <p class="question">Descreva a situação do jeito mais simples e direto possível.</p>
+
+            <div class="field">
+              <label for="situation">O que aconteceu? <span class="required">*</span></label>
+              <textarea id="situation" name="situation" placeholder="Escreva aqui..." required></textarea>
+            </div>
+          </div>
+
+          <div class="step" data-step="2">
+            <div class="kicker">Pensamento</div>
+            <h3>O que passou pela minha cabeça?</h3>
+            <p class="question">Anote o pensamento que veio automaticamente, mesmo que ele pareça confuso.</p>
+
+            <div class="field">
+              <label for="thought">O que passou pela minha cabeça? <span class="required">*</span></label>
+              <textarea id="thought" name="thought" placeholder="Escreva aqui..." required></textarea>
+            </div>
+          </div>
+
+          <div class="step" data-step="3">
+            <div class="kicker">Emoção</div>
+            <h3>O que senti?</h3>
+            <p class="question">Marque uma ou mais emoções e indique a intensidade de cada uma de 0 a 10.</p>
+
+            <div class="choices" id="emotionChoices">
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-raiva" name="emotions" value="Raiva" />
+                  <label for="emotion-raiva">Raiva</label>
+                </div>
+                <div class="intensity">
+                  <label for="intensity-raiva">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-raiva" name="intensity-Raiva" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-medo" name="emotions" value="Medo" />
+                  <label for="emotion-medo">Medo</label>
+                </div>
+                <div class="intensity">
+                  <label for="intensity-medo">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-medo" name="intensity-Medo" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-ansiedade" name="emotions" value="Ansiedade" />
+                  <label for="emotion-ansiedade">Ansiedade</label>
+                </div>
+                <div class="intensity">
+                  <label for="intensity-ansiedade">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-ansiedade" name="intensity-Ansiedade" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-tristeza" name="emotions" value="Tristeza" />
+                  <label for="emotion-tristeza">Tristeza</label>
+                </div>
+                <div class="intensity">
+                  <label for="intensity-tristeza">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-tristeza" name="intensity-Tristeza" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-frustracao" name="emotions" value="Frustração" />
+                  <label for="emotion-frustracao">Frustração</label>
+                </div>
+                <div class="intensity">
+                  <label for="intensity-frustracao">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-frustracao" name="intensity-Frustração" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-culpa" name="emotions" value="Culpa" />
+                  <label for="emotion-culpa">Culpa</label>
+                </div>
+                <div class="intensity">
+                  <label for="intensity-culpa">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-culpa" name="intensity-Culpa" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="emotion-outro" name="emotions" value="Outro" />
+                  <label for="emotion-outro">Outro</label>
+                </div>
+                <input class="other-input" id="emotionOther" name="emotionOther" type="text" placeholder="Qual emoção?" />
+                <div class="intensity">
+                  <label for="intensity-outro">Intensidade</label>
+                  <div class="range-row">
+                    <input type="range" id="intensity-outro" name="intensity-Outro" min="0" max="10" value="5" />
+                    <span class="range-value">5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step" data-step="4">
+            <div class="kicker">Fato ou interpretação</div>
+            <h3>O pensamento é um fato ou uma interpretação?</h3>
+            <p class="question">Escolha a opção que parece mais honesta neste momento.</p>
+
+            <div class="choices one-col">
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="radio" id="fact" name="thoughtType" value="Fato" required />
+                  <label for="fact">Fato</label>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="radio" id="interpretation" name="thoughtType" value="Interpretação" />
+                  <label for="interpretation">Interpretação</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step" data-step="5">
+            <div class="kicker">Nova perspectiva</div>
+            <h3>Existe outra forma de enxergar essa situação?</h3>
+            <p class="question">Tente escrever uma alternativa mais ampla, mais justa ou mais realista.</p>
+
+            <div class="field">
+              <label for="anotherView">Existe outra forma de enxergar essa situação? <span class="required">*</span></label>
+              <textarea id="anotherView" name="anotherView" placeholder="Escreva aqui..." required></textarea>
+            </div>
+          </div>
+
+          <div class="step" data-step="6">
+            <div class="kicker">Ação saudável</div>
+            <h3>Qual seria a forma mais saudável de lidar com isso?</h3>
+            <p class="question">Marque uma ou mais opções.</p>
+
+            <div class="choices" id="copingChoices">
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="coping-conversar" name="coping" value="Conversar antes de reagir" />
+                  <label for="coping-conversar">Conversar antes de reagir</label>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="coping-perguntas" name="coping" value="Fazer perguntas" />
+                  <label for="coping-perguntas">Fazer perguntas</label>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="coping-informacoes" name="coping" value="Buscar mais informações" />
+                  <label for="coping-informacoes">Buscar mais informações</label>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="coping-acalmar" name="coping" value="Esperar me acalmar" />
+                  <label for="coping-acalmar">Esperar me acalmar</label>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="coping-aceitar" name="coping" value="Aceitar que não controlo tudo" />
+                  <label for="coping-aceitar">Aceitar que não controlo tudo</label>
+                </div>
+              </div>
+
+              <div class="choice">
+                <div class="choice-row">
+                  <input type="checkbox" id="coping-outro" name="coping" value="Outro" />
+                  <label for="coping-outro">Outro</label>
+                </div>
+                <input class="other-input" id="copingOther" name="copingOther" type="text" placeholder="Qual forma?" />
+              </div>
+            </div>
+          </div>
+
+          <div class="step" data-step="7">
+            <div class="kicker">Resposta equilibrada</div>
+            <h3>O que meu "eu mais maduro" diria sobre essa situação?</h3>
+            <p class="question">Escreva uma resposta mais centrada, cuidadosa e realista.</p>
+
+            <div class="field">
+              <label for="balancedResponse">O que meu "eu mais maduro" diria sobre essa situação? <span class="required">*</span></label>
+              <textarea id="balancedResponse" name="balancedResponse" placeholder="Escreva aqui..." required></textarea>
+            </div>
+          </div>
+
+          <div class="step" data-step="8">
+            <div class="kicker">Final</div>
+            <h3>Pronto. Seu registro foi preenchido.</h3>
+            <p class="question">
+              Agora você pode gerar o PDF em A4, baixar, compartilhar pelo WhatsApp quando o dispositivo permitir,
+              ou limpar as respostas salvas neste navegador.
+            </p>
+
+            <div class="reminder-card">
+              <strong>Lembrete</strong><br />
+              Nem tudo o que eu penso é verdade. Nem tudo o que eu sinto é um fato.
+              Posso escolher como responder. 🧠
+            </div>
+
+            <div class="final-actions">
+              <button type="button" class="btn-primary" id="generatePdfBtn">Gerar PDF</button>
+              <button type="button" class="btn-secondary" id="downloadPdfBtn">Baixar PDF</button>
+              <button type="button" class="btn-secondary" id="sharePdfBtn">Compartilhar no WhatsApp</button>
+              <button type="button" class="btn-danger" id="clearBtn">Limpar respostas</button>
+            </div>
+          </div>
+        </section>
+
+        <div id="errorBox" class="message error" role="alert"></div>
+        <div id="successBox" class="message success" role="status"></div>
+
+        <nav class="nav" aria-label="Navegação do quiz">
+          <div class="nav-left">
+            <button type="button" class="btn-secondary" id="backBtn">Voltar</button>
+          </div>
+          <div class="nav-right">
+            <button type="button" class="btn-primary" id="nextBtn">Próximo</button>
+          </div>
+        </nav>
+      </form>
+
+      <p class="disclaimer">
+        Este material é uma ferramenta de reflexão e organização emocional. Ele não substitui acompanhamento psicológico, médico ou profissional.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "organizando-meus-pensamentos-quiz-v2";
+
+    const form = document.getElementById("thoughtForm");
+    const steps = Array.from(document.querySelectorAll(".step"));
+    const progressBar = document.getElementById("progressBar");
+    const stepCount = document.getElementById("stepCount");
+    const backBtn = document.getElementById("backBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const errorBox = document.getElementById("errorBox");
+    const successBox = document.getElementById("successBox");
+
+    const generatePdfBtn = document.getElementById("generatePdfBtn");
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+    const sharePdfBtn = document.getElementById("sharePdfBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    let currentStep = 0;
+
+    function showError(message) {
+      successBox.classList.remove("show");
+      errorBox.textContent = message;
+      errorBox.classList.add("show");
+    }
+
+    function showSuccess(message) {
+      errorBox.classList.remove("show");
+      successBox.textContent = message;
+      successBox.classList.add("show");
+      setTimeout(() => successBox.classList.remove("show"), 4200);
+    }
+
+    function clearMessages() {
+      errorBox.classList.remove("show");
+      successBox.classList.remove("show");
+    }
+
+    function slugify(text) {
+      return String(text || "questionario")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+    }
+
+    function getCheckedValues(name) {
+      return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(input => input.value);
+    }
+
+    function updateChoiceStates() {
+      document.querySelectorAll(".choice").forEach(choice => {
+        const input = choice.querySelector('input[type="checkbox"], input[type="radio"]');
+        if (!input) return;
+        choice.classList.toggle("is-active", input.checked);
+      });
+
+      document.querySelectorAll('input[type="range"]').forEach(range => {
+        const valueEl = range.closest(".range-row")?.querySelector(".range-value");
+        if (valueEl) valueEl.textContent = range.value;
+      });
+    }
+
+    function getIntensityForEmotion(value) {
+      const idMap = {
+        "Raiva": "intensity-raiva",
+        "Medo": "intensity-medo",
+        "Ansiedade": "intensity-ansiedade",
+        "Tristeza": "intensity-tristeza",
+        "Frustração": "intensity-frustracao",
+        "Culpa": "intensity-culpa",
+        "Outro": "intensity-outro"
+      };
+
+      const range = document.getElementById(idMap[value]);
+      return range ? Number(range.value) : null;
+    }
+
+    function getFormData() {
+      const emotions = getCheckedValues("emotions").map(value => {
+        const label = value === "Outro"
+          ? (document.getElementById("emotionOther").value.trim() || "Outro")
+          : value;
+
+        return {
+          label,
+          raw: value,
+          intensity: getIntensityForEmotion(value)
+        };
+      });
+
+      const coping = getCheckedValues("coping").map(value => {
+        if (value === "Outro") {
+          return document.getElementById("copingOther").value.trim() || "Outro";
+        }
+        return value;
+      });
+
+      const thoughtType = document.querySelector('input[name="thoughtType"]:checked')?.value || "";
+
+      return {
+        name: document.getElementById("name").value.trim(),
+        situation: document.getElementById("situation").value.trim(),
+        thought: document.getElementById("thought").value.trim(),
+        emotions,
+        emotionOther: document.getElementById("emotionOther").value.trim(),
+        thoughtType,
+        anotherView: document.getElementById("anotherView").value.trim(),
+        coping,
+        copingOther: document.getElementById("copingOther").value.trim(),
+        balancedResponse: document.getElementById("balancedResponse").value.trim(),
+        currentStep,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function validateStep(stepIndex) {
+      const data = getFormData();
+
+      if (stepIndex === 0 && !data.name) return "Preencha o nome para continuar.";
+      if (stepIndex === 1 && !data.situation) return "Preencha a situação: o que aconteceu?";
+      if (stepIndex === 2 && !data.thought) return "Preencha o pensamento: o que passou pela sua cabeça?";
+      if (stepIndex === 3) {
+        if (!data.emotions.length) return "Marque pelo menos uma emoção.";
+        if (document.getElementById("emotion-outro").checked && !data.emotionOther) {
+          return "Você marcou “Outro”. Escreva qual emoção.";
+        }
+      }
+      if (stepIndex === 4 && !data.thoughtType) return "Selecione se o pensamento é um fato ou uma interpretação.";
+      if (stepIndex === 5 && !data.anotherView) return "Preencha se existe outra forma de enxergar essa situação.";
+      if (stepIndex === 6) {
+        if (!data.coping.length) return "Marque pelo menos uma forma mais saudável de lidar com isso.";
+        if (document.getElementById("coping-outro").checked && !data.copingOther) {
+          return "Você marcou “Outro”. Escreva qual forma.";
+        }
+      }
+      if (stepIndex === 7 && !data.balancedResponse) return "Preencha a resposta equilibrada.";
+
+      return "";
+    }
+
+    function validateAll() {
+      for (let i = 0; i <= 7; i += 1) {
+        const error = validateStep(i);
+        if (error) {
+          currentStep = i;
+          renderStep();
+          return error;
+        }
+      }
+      return "";
+    }
+
+    function saveToLocalStorage() {
+      const data = getFormData();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function restoreTextValue(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value || "";
+    }
+
+    function loadFromLocalStorage() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+
+      try {
+        const data = JSON.parse(raw);
+
+        restoreTextValue("name", data.name);
+        restoreTextValue("situation", data.situation);
+        restoreTextValue("thought", data.thought);
+        restoreTextValue("emotionOther", data.emotionOther);
+        restoreTextValue("anotherView", data.anotherView);
+        restoreTextValue("copingOther", data.copingOther);
+        restoreTextValue("balancedResponse", data.balancedResponse);
+
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+          input.checked = false;
+        });
+
+        if (Array.isArray(data.emotions)) {
+          data.emotions.forEach(item => {
+            const rawValue = item.raw || item.label;
+            const known = ["Raiva", "Medo", "Ansiedade", "Tristeza", "Frustração", "Culpa", "Outro"];
+            const value = known.includes(rawValue) ? rawValue : "Outro";
+            const checkbox = Array.from(document.querySelectorAll('input[name="emotions"]')).find(input => input.value === value);
+            if (checkbox) checkbox.checked = true;
+
+            const intensityIds = {
+              "Raiva": "intensity-raiva",
+              "Medo": "intensity-medo",
+              "Ansiedade": "intensity-ansiedade",
+              "Tristeza": "intensity-tristeza",
+              "Frustração": "intensity-frustracao",
+              "Culpa": "intensity-culpa",
+              "Outro": "intensity-outro"
+            };
+
+            const range = document.getElementById(intensityIds[value]);
+            if (range && Number.isFinite(Number(item.intensity))) {
+              range.value = String(item.intensity);
+            }
+
+            if (value === "Outro" && item.label !== "Outro" && !data.emotionOther) {
+              restoreTextValue("emotionOther", item.label);
+            }
+          });
+        }
+
+        if (data.thoughtType) {
+          const radio = Array.from(document.querySelectorAll('input[name="thoughtType"]')).find(input => input.value === data.thoughtType);
+          if (radio) radio.checked = true;
+        }
+
+        if (Array.isArray(data.coping)) {
+          data.coping.forEach(item => {
+            const known = [
+              "Conversar antes de reagir",
+              "Fazer perguntas",
+              "Buscar mais informações",
+              "Esperar me acalmar",
+              "Aceitar que não controlo tudo"
+            ];
+
+            const value = known.includes(item) ? item : "Outro";
+            const checkbox = Array.from(document.querySelectorAll('input[name="coping"]')).find(input => input.value === value);
+            if (checkbox) checkbox.checked = true;
+
+            if (value === "Outro" && item !== "Outro" && !data.copingOther) {
+              restoreTextValue("copingOther", item);
+            }
+          });
+        }
+
+        if (Number.isInteger(data.currentStep) && data.currentStep >= 0 && data.currentStep < steps.length) {
+          currentStep = data.currentStep;
+        }
+      } catch (error) {
+        console.warn("Não foi possível carregar respostas salvas.", error);
+      }
+    }
+
+    function renderStep() {
+      steps.forEach((step, index) => {
+        step.classList.toggle("active", index === currentStep);
+      });
+
+      const progress = ((currentStep + 1) / steps.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      stepCount.textContent = `${currentStep + 1} de ${steps.length}`;
+
+      backBtn.disabled = currentStep === 0;
+      nextBtn.style.display = currentStep === steps.length - 1 ? "none" : "inline-flex";
+
+      clearMessages();
+      updateChoiceStates();
+      saveToLocalStorage();
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function addWrappedText(doc, text, x, y, maxWidth, lineHeight, options = {}) {
+      const safeText = String(text || "—");
+      const lines = doc.splitTextToSize(safeText, maxWidth);
+      const bottom = options.bottom || 282;
+
+      lines.forEach(line => {
+        if (y > bottom) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(line, x, y);
+        y += lineHeight;
+      });
+
+      return y;
+    }
+
+    function addSection(doc, state, title, subtitle, bodyLines) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const marginX = 18;
+      const maxWidth = pageWidth - marginX * 2;
+      let y = state.y;
+
+      if (y > 246) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFillColor(235, 247, 248);
+      doc.roundedRect(marginX - 2, y - 7, maxWidth + 4, 12, 3, 3, "F");
+
+      doc.setTextColor(16, 67, 78);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(title, marginX, y);
+
+      y += 8;
+
+      if (subtitle) {
+        doc.setTextColor(79, 91, 100);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        y = addWrappedText(doc, subtitle, marginX, y, maxWidth, 5.2);
+        y += 2;
+      }
+
+      doc.setTextColor(30, 36, 43);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+
+      bodyLines.forEach(item => {
+        if (typeof item === "string") {
+          y = addWrappedText(doc, item, marginX, y, maxWidth, 5.7);
+          y += 2.5;
+          return;
+        }
+
+        doc.setFont("helvetica", "bold");
+        y = addWrappedText(doc, item.label, marginX, y, maxWidth, 5.7);
+        doc.setFont("helvetica", "normal");
+        y = addWrappedText(doc, item.value || "—", marginX, y, maxWidth, 5.7);
+        y += 3;
+      });
+
+      state.y = y + 6;
+    }
+
+    function addPdfFooter(doc) {
+      const pageCount = doc.getNumberOfPages();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      for (let i = 1; i <= pageCount; i += 1) {
+        doc.setPage(i);
+        doc.setDrawColor(210, 224, 226);
+        doc.line(18, pageHeight - 16, pageWidth - 18, pageHeight - 16);
+
+        doc.setTextColor(92, 103, 110);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+
+        const disclaimer = "Este material é uma ferramenta de reflexão e organização emocional. Ele não substitui acompanhamento psicológico, médico ou profissional.";
+        const lines = doc.splitTextToSize(disclaimer, pageWidth - 54);
+        doc.text(lines, 18, pageHeight - 11);
+
+        doc.text(`${i}/${pageCount}`, pageWidth - 18, pageHeight - 8, { align: "right" });
+      }
+    }
+
+    function createPdfBlob(data) {
+      if (!window.jspdf?.jsPDF) {
+        throw new Error("A biblioteca de PDF ainda não carregou. Verifique sua conexão e tente novamente.");
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const state = { y: 22 };
+
+      doc.setFillColor(10, 35, 48);
+      doc.rect(0, 0, pageWidth, 44, "F");
+
+      doc.setTextColor(244, 251, 251);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text("Organizando meus pensamentos", 18, 24);
+
+      doc.setTextColor(190, 223, 225);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10.5);
+      const date = new Date().toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+      doc.text(`Nome: ${data.name}`, 18, 35);
+      doc.text(`Data: ${date}`, pageWidth - 18, 35, { align: "right" });
+
+      state.y = 54;
+
+      addSection(doc, state, "Situação", "O que aconteceu?", [
+        { label: "O que aconteceu?", value: data.situation }
+      ]);
+
+      addSection(doc, state, "Pensamento", "O que passou pela minha cabeça?", [
+        { label: "O que passou pela minha cabeça?", value: data.thought }
+      ]);
+
+      const emotionsText = data.emotions
+        .map(item => `${item.label} — intensidade ${item.intensity}/10`)
+        .join("\n");
+
+      addSection(doc, state, "Emoção", "O que senti?", [
+        { label: "Emoções marcadas:", value: emotionsText }
+      ]);
+
+      addSection(doc, state, "Fato ou interpretação", "O pensamento é um fato ou uma interpretação?", [
+        { label: "Resposta:", value: data.thoughtType }
+      ]);
+
+      addSection(doc, state, "Nova perspectiva", "Existe outra forma de enxergar essa situação?", [
+        { label: "Resposta:", value: data.anotherView }
+      ]);
+
+      addSection(doc, state, "Forma mais saudável", "Qual seria a forma mais saudável de lidar com isso?", [
+        { label: "Opções marcadas:", value: data.coping.join("\n") }
+      ]);
+
+      addSection(doc, state, "Resposta equilibrada", "O que meu \"eu mais maduro\" diria sobre essa situação?", [
+        { label: "Resposta:", value: data.balancedResponse }
+      ]);
+
+      addSection(doc, state, "Lembrete", "", [
+        "Nem tudo o que eu penso é verdade. Nem tudo o que eu sinto é um fato. Posso escolher como responder. 🧠"
+      ]);
+
+      addPdfFooter(doc);
+
+      return doc.output("blob");
+    }
+
+    async function preparePdf() {
+      const error = validateAll();
+
+      if (error) {
+        showError(error);
+        return null;
+      }
+
+      const data = getFormData();
+      saveToLocalStorage();
+
+      try {
+        const blob = createPdfBlob(data);
+        const filename = `organizando-meus-pensamentos-${slugify(data.name)}.pdf`;
+        return { blob, filename };
+      } catch (error) {
+        showError(error.message || "Não foi possível gerar o PDF.");
+        return null;
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+    }
+
+    function openPdfBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const opened = window.open(url, "_blank");
+
+      if (!opened) {
+        downloadBlob(blob, filename);
+        showError("O navegador bloqueou a abertura do PDF. O arquivo foi baixado.");
+        setTimeout(() => URL.revokeObjectURL(url), 1200);
+        return;
+      }
+
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      showSuccess("PDF gerado. Ele foi aberto em uma nova aba.");
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const error = validateStep(currentStep);
+      if (error) {
+        showError(error);
+        return;
+      }
+
+      currentStep = Math.min(currentStep + 1, steps.length - 1);
+      renderStep();
+    });
+
+    backBtn.addEventListener("click", () => {
+      currentStep = Math.max(currentStep - 1, 0);
+      renderStep();
+    });
+
+    generatePdfBtn.addEventListener("click", async () => {
+      const result = await preparePdf();
+      if (!result) return;
+      openPdfBlob(result.blob, result.filename);
+    });
+
+    downloadPdfBtn.addEventListener("click", async () => {
+      const result = await preparePdf();
+      if (!result) return;
+      downloadBlob(result.blob, result.filename);
+      showSuccess("PDF baixado com sucesso.");
+    });
+
+    sharePdfBtn.addEventListener("click", async () => {
+      const result = await preparePdf();
+      if (!result) return;
+
+      const file = new File([result.blob], result.filename, { type: "application/pdf" });
+
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: "Organizando meus pensamentos",
+            text: "Questionário preenchido: Organizando meus pensamentos.",
+            files: [file]
+          });
+          showSuccess("PDF compartilhado pelo menu do dispositivo.");
+        } else {
+          downloadBlob(result.blob, result.filename);
+          showError("Este navegador não permite compartilhar PDF como arquivo. O PDF foi baixado para você enviar manualmente pelo WhatsApp.");
+        }
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        downloadBlob(result.blob, result.filename);
+        showError("Não foi possível compartilhar automaticamente. O PDF foi baixado para você enviar manualmente pelo WhatsApp.");
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      const confirmed = window.confirm("Tem certeza que deseja apagar todas as respostas salvas neste navegador?");
+      if (!confirmed) return;
+
+      form.reset();
+      currentStep = 0;
+      localStorage.removeItem(STORAGE_KEY);
+      updateChoiceStates();
+      renderStep();
+      showSuccess("Respostas apagadas.");
+    });
+
+    form.addEventListener("input", () => {
+      updateChoiceStates();
+      saveToLocalStorage();
+    });
+
+    form.addEventListener("change", () => {
+      updateChoiceStates();
+      saveToLocalStorage();
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadFromLocalStorage();
+      updateChoiceStates();
+      renderStep();
+    });
+  </script>
+</body>
+</html>
